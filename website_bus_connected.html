@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Look For My Bus - Real-Time Bus Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;family=Open+Sans:wght@300;400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --text: #334155;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text);
+            background-color: var(--light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        section {
+            padding: 5rem 0;
+            position: relative;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent);
+            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+        }
+        
+        .btn-accent:hover {
+            box-shadow: 0 6px 12px rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .app-mockup {
+            position: relative;
+            width: 300px;
+            margin: 0 auto;
+            margin-top: 3rem;
+            z-index: 3;
+        }
+        
+        .app-screen {
+            width: 100%;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        /* Animated elements */
+        .city-animation {
+            position: absolute;
+            width: 100%;
+            height: 30%;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .building {
+            position: absolute;
+            bottom: 0;
+            background: var(--dark);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        .moving-bus {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background-color: #ffdd00;
+            border-radius: 8px 8px 0 0;
+            bottom: 30%;
+            animation: moveBus 15s linear infinite;
+        }
+        
+        .moving-bus::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #333;
+            border-radius: 50%;
+            bottom: -5px;
+            left: 15px;
+        }
+        
+        .moving-bus::before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #333;
+            border-radius: 50%;
+            bottom: -5px;
+            right: 15px;
+        }
+        
+        .gps-marker {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--secondary);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 0 10px var(--secondary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes moveBus {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: rotate(-45deg) scale(1); }
+            50% { transform: rotate(-45deg) scale(1.2); }
+            100% { transform: rotate(-45deg) scale(1); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* About Section */
+        .about-section {
+            background-color: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .story-container {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .story-step {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            max-width: 800px;
+        }
+        
+        .story-step:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+        
+        .story-icon {
+            font-size: 4rem;
+            flex-shrink: 0;
+        }
+        
+        /* Features Section */
+        .features-section {
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        
+        /* Benefits Section */
+        .benefits-section {
+            background-color: white;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 4rem;
+        }
+        
+        .benefit-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .benefit-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .comparison-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Demo Section */
+        .demo-section {
+            background: linear-gradient(to bottom, #f0fdf4, #dcfce7);
+        }
+        
+        .demo-slider {
+            max-width: 300px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .demo-slides {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        
+        .demo-slide {
+            min-width: 100%;
+        }
+        
+        .demo-slide img {
+            width: 100%;
+            display: block;
+        }
+        
+        .demo-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .demo-dot.active {
+            background: var(--primary);
+        }
+        
+        /* Testimonials Section */
+        .testimonials-section {
+            background: linear-gradient(to bottom, #faf5ff, #f3e8ff);
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+        
+        .testimonial-card::before {
+            content: '"';
+            font-size: 5rem;
+            color: #e2e8f0;
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            line-height: 1;
+        }
+        
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            color: white;
+        }
+        
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+        
+        .qr-code {
+            width: 150px;
+            height: 150px;
+            background: white;
+            margin: 0 auto;
+            border-radius: 12px;
+            padding: 10px;
+        }
+        
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .bus-hover-animation {
+            position: absolute;
+            bottom: -30px;
+            left: -100px;
+            width: 60px;
+            height: 30px;
+            background-color: var(--accent);
+            border-radius: 8px 8px 0 0;
+            transition: transform 0.5s ease;
+            opacity: 0;
+        }
+        
+        .cta-button-container:hover .bus-hover-animation {
+            opacity: 1;
+            transform: translateX(400px);
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-logo h3 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 1.5rem;
+        }
+        
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .moving-bus-footer {
+            position: absolute;
+            bottom: 20px;
+            width: 40px;
+            height: 20px;
+            background-color: var(--accent);
+            border-radius: 5px;
+            animation: moveBusFooter 15s linear infinite;
+        }
+        
+        @keyframes moveBusFooter {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+        
+        /* Contact Section */
+        .contact-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 5rem 0 7rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .contact-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+        .contact-info {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(37,99,235,0.08);
+            padding: 30px 40px;
+            text-align: center;
+            min-width: 220px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        .contact-info:hover {
+            transform: translateY(-10px) scale(1.05);
+        }
+        .contact-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+        .animated-bounce {
+            animation: bounce 1.2s infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0);}
+            100% { transform: translateY(-15px);}
+        }
+        .contact-form {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(16,185,129,0.08);
+            padding: 30px 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        .contact-form input, .contact-form textarea {
+            font-family: inherit;
+            font-size: 1rem;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            outline: none;
+            transition: border 0.3s;
+            width: 100%;
+        }
+        .contact-form input:focus, .contact-form textarea:focus {
+            border: 1.5px solid var(--primary);
+        }
+        .contact-form textarea {
+            resize: vertical;
+        }
+        .contact-form button {
+            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-success {
+            color: var(--secondary);
+            font-weight: 600;
+            margin-top: 1rem;
+            text-align: center;
+            animation: fadeIn 1s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0;}
+            to { opacity: 1;}
+        }
+        .animated-bus-contact {
+            position: absolute;
+            bottom: 10px;
+            left: -80px;
+            width: 60px;
+            height: 30px;
+            background: var(--accent);
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+            animation: moveBusContact 12s linear infinite;
+        }
+        .animated-bus-contact::after, .animated-bus-contact::before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #333;
+            border-radius: 50%;
+            bottom: -5px;
+        }
+        .animated-bus-contact::after { left: 15px;}
+        .animated-bus-contact::before { right: 15px;}
+        @keyframes moveBusContact {
+            0% { transform: translateX(0);}
+            100% { transform: translateX(calc(100vw + 80px));}
+        }
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .section-title h2 {
+                font-size: 2rem;
+            }
+
+            .story-step {
+                flex-direction: column !important;
+                text-align: center;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .contact-grid { flex-direction: column; align-items: center;}
+            .form-row { flex-direction: column;}
+            .contact-form { padding: 20px;}
+
+            /* Fix buildings and bus positions for mobile */
+            .city-animation .building {
+                width: 30px !important;
+                left: unset !important;
+                right: unset !important;
+                min-width: 20px;
+            }
+            .city-animation .building:nth-child(1) { left: 2%; }
+            .city-animation .building:nth-child(2) { left: 12%; }
+            .city-animation .building:nth-child(3) { left: 22%; }
+            .city-animation .building:nth-child(4) { left: 32%; }
+            .city-animation .building:nth-child(5) { left: 52%; }
+            .city-animation .building:nth-child(6) { left: 62%; }
+            .city-animation .building:nth-child(7) { left: 72%; }
+            .city-animation .building:nth-child(8) { left: 82%; }
+            .city-animation {
+                height: 80px;
+            }
+            .bus-animation-below-hero {
+                height: 40px;
+            }
+            .bus-animation-below-hero .moving-bus,
+            .hero-bus-animations .animated-bus {
+                width: 40px;
+                height: 20px;
+                bottom: 0;
+            }
+            .hero-bus-animations {
+                height: 60px;
+                bottom: 40px;
+            }
+            .animated-gps {
+                width: 14px;
+                height: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            section {
+                padding: 3rem 0;
+            }
+            
+            .features-grid,
+            .benefits-grid,
+            .tech-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Further adjust buildings and buses for very small screens */
+            .city-animation .building {
+                width: 18px !important;
+                min-width: 10px;
+            }
+            .city-animation {
+                height: 50px;
+            }
+            .bus-animation-below-hero {
+                height: 24px;
+            }
+            .bus-animation-below-hero .moving-bus,
+            .hero-bus-animations .animated-bus {
+                width: 24px;
+                height: 12px;
+                bottom: 0;
+            }
+            .hero-bus-animations {
+                height: 30px;
+                bottom: 20px;
+            }
+            .animated-gps {
+                width: 10px;
+                height: 10px;
+            }
+        }
+
+        /* New styles for animated buses and GPS markers in hero section */
+        .hero-bus-animations {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .animated-bus {
+            position: absolute;
+            bottom: 0;
+            width: 60px;
+            height: 30px;
+            background: var(--accent);
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+            animation: busDrive 8s linear infinite;
+        }
+        .animated-bus::after, .animated-bus::before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #333;
+            border-radius: 50%;
+            bottom: -5px;
+        }
+        .animated-bus::after { left: 15px;}
+        .animated-bus::before { right: 15px;}
+        @keyframes busDrive {
+            0% { transform: translateY(0) scaleX(1);}
+            10% { transform: translateY(-10px) scaleX(1.05);}
+            20% { transform: translateY(-5px) scaleX(1);}
+            30% { transform: translateY(-15px) scaleX(1.1);}
+            40% { transform: translateY(-10px) scaleX(1);}
+            50% { transform: translateY(0) scaleX(1);}
+            100% { transform: translateY(0) scaleX(1);}
+        }
+        .animated-gps {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: var(--secondary);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 0 18px var(--secondary);
+            animation: gpsPulse 2s infinite;
+        }
+        @keyframes gpsPulse {
+            0% { transform: rotate(-45deg) scale(1);}
+            50% { transform: rotate(-45deg) scale(1.3);}
+            100% { transform: rotate(-45deg) scale(1);}
+        }
+        .hero-logo-circle {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem auto;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .hero-logo-circle img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+<!-- Hero Section -->
+<section class="hero">
+<div class="city-animation">
+<div class="building" style="height: 120px; width: 60px; left: 5%;"></div>
+<div class="building" style="height: 150px; width: 80px; left: 15%;"></div>
+<div class="building" style="height: 100px; width: 70px; left: 25%;"></div>
+<div class="building" style="height: 180px; width: 90px; left: 35%;"></div>
+<div class="building" style="height: 140px; width: 60px; left: 50%;"></div>
+<div class="building" style="height: 160px; width: 80px; left: 60%;"></div>
+<div class="building" style="height: 110px; width: 70px; left: 72%;"></div>
+<div class="building" style="height: 130px; width: 60px; left: 84%;"></div>
+<!-- Removed moving-bus elements from here -->
+<div class="gps-marker" style="top: 30%; left: 30%;"></div>
+<div class="gps-marker" style="top: 50%; left: 50%;"></div>
+<div class="gps-marker" style="top: 70%; left: 70%;"></div>
+</div>
+<div class="container">
+<div class="hero-content">
+<!-- Logo Section Start -->
+<div class="hero-logo-circle">
+<img alt="Look For My Bus Logo" src="logo.png"/>
+</div>
+<!-- Logo Section End -->
+<h1>Find Your Bus. Save Your Time. Travel Smart.</h1>
+<p>Real-time bus tracking solution for tier-2 and small cities in India</p>
+<div class="hero-buttons">
+<a class="btn" href="#download">Download App</a>
+<a class="btn btn-secondary" href="track_the_bus.html" target="_blank">Track My Bus Now</a>
+</div>
+<!-- Removed bus animation from here -->
+</div>
+</div>
+<!-- Add bus animation below the hero section, above About Section -->
+<div class="bus-animation-below-hero">
+<div class="moving-bus" style="animation-duration: 25s; left: 5%; bottom: 0;"></div>
+<div class="moving-bus" style="animation-duration: 20s; animation-delay: -5s; left: 40%; bottom: 0;"></div>
+<div class="moving-bus" style="animation-duration: 30s; animation-delay: -10s; left: 75%; bottom: 0;"></div>
+</div>
+</section><div class="bus-animation-below-hero"><div class="animated-bus" style="left:10%; animation-delay:0s;"></div><div class="animated-bus" style="left:40%; animation-delay:1.5s;"></div><div class="animated-bus" style="left:70%; animation-delay:3s;"></div></div>
+<!-- About Section -->
+<section class="about-section" id="about">
+<div class="container">
+<div class="section-title">
+<h2>Our Story</h2>
+</div>
+<div class="story-container">
+<div class="story-step">
+<div class="story-icon">⏳</div>
+<div class="story-text">
+<h3>Endless Waiting</h3>
+<p>We saw commuters in small cities waiting endlessly at bus stops with no information about bus arrivals.</p>
+</div>
+</div>
+<div class="story-step">
+<div class="story-icon">😤</div>
+<div class="story-text">
+<h3>Frustration Grows</h3>
+<p>Unpredictable bus schedules led to frustration, wasted time, and increased use of private vehicles.</p>
+</div>
+</div>
+<div class="story-step">
+<div class="story-icon">💡</div>
+<div class="story-text">
+<h3>The Solution</h3>
+<p>We created Look For My Bus to bring real-time tracking and predictability to public transportation.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Section -->
+<section class="features-section" id="features">
+<div class="container">
+<div class="section-title">
+<h2>Amazing Features</h2>
+</div>
+<div class="features-grid">
+<div class="feature-card">
+<div class="feature-icon">📍</div>
+<h3>Real-time GPS Tracking</h3>
+<p>Track buses in real-time with accurate GPS technology. Know exactly where your bus is and when it will arrive.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">⏱️</div>
+<h3>Estimated Arrival Times</h3>
+<p>Get precise ETA predictions so you can plan your journey better and minimize waiting time.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">🗺️</div>
+<h3>Route Maps &amp; Stop Info</h3>
+<p>Access detailed route maps and stop information to plan your entire journey with confidence.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">📊</div>
+<h3>Analytics Dashboard</h3>
+<p>Transport authorities get powerful analytics to optimize routes and improve services.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Benefits Section -->
+<section class="benefits-section" id="benefits">
+<div class="container">
+<div class="section-title">
+<h2>Why Use Look For My Bus?</h2>
+</div>
+<div class="benefits-grid">
+<div class="benefit-card">
+<div class="benefit-icon">⏳</div>
+<h3>Save Time</h3>
+<p>Reduce waiting time by up to 70% with accurate bus arrival predictions.</p>
+</div>
+<div class="benefit-card">
+<div class="benefit-icon">😌</div>
+<h3>Reduce Stress</h3>
+<p>No more guessing games. Know exactly when your bus will arrive.</p>
+</div>
+<div class="benefit-card">
+<div class="benefit-icon">🚍</div>
+<h3>Travel Smarter</h3>
+<p>Plan your journeys better and make the most of public transportation.</p>
+</div>
+<div class="benefit-card">
+<div class="benefit-icon">🌍</div>
+<h3>Cleaner Cities</h3>
+<p>With more people using efficient public transport, we reduce congestion and pollution.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Demo Section -->
+<!-- Tech Section -->
+<!-- Testimonials Section -->
+<section class="testimonials-section" id="testimonials">
+<div class="container">
+<div class="section-title">
+<h2>What Users Say</h2>
+</div>
+<div class="testimonials-grid">
+<div class="testimonial-card">
+<div class="testimonial-avatar">👩‍🎓</div>
+<h3>Priya S.</h3>
+<p>"Now I never miss my bus! The app is so accurate and has saved me hours of waiting time."</p>
+</div>
+<div class="testimonial-card">
+<div class="testimonial-avatar">👨‍💼</div>
+<h3>Rahul M.</h3>
+<p>"Bus timings are reliable now. I can plan my day better without worrying about transportation delays."</p>
+</div>
+<div class="testimonial-card">
+<div class="testimonial-avatar">👩‍💼</div>
+<h3>Anjali T.</h3>
+<p>"Our city feels smarter with this app. Public transport is now a viable option for daily commute."</p>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="cta-section" id="download">
+<div class="container">
+<div class="cta-content">
+<h2>Download Look For My Bus Today</h2>
+<p>Join thousands of smart commuters who save time and travel stress-free every day</p>
+<div class="cta-buttons">
+<div class="cta-button-container">
+<a class="btn btn-accent" href="#">Download App Now</a>
+<div class="bus-hover-animation"></div>
+</div>
+</div>
+<div class="qr-code">
+<img alt="Download QR Code" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNMzAgMzBIMzBWNTBIMzBWMzBaTTMwIDcwSDMwVjkwSDMwVjcwWk0zMCAxMTBIMzBIMzBWMTEwWk01MCAzMEg1MFY1MEg1MFYzMFpNNTAgNzBINzBINzBWNzBINTBaTTUwIDExMEg1MEg1MFYxMTBaTTcwIDMwSDcwSDcwVjMwWk03MCA1MEg5MEg5MFY1MEg3MFpNNzAgNzBINzBINzBWNzBaTTcwIDkwSDcwSDcwVjkwWk03MCAxMTBINzBINzBWMTEwWk05MCAzMEg5MEg5MFYzMFpNOTAgNTBIMTBWNTBINzBINjBINjBWNTAiIGZpbGw9ImJsYWNrIi8+PC9zdmc+"/>
+</div>
+<p>Scan to download</p>
+</div>
+</div>
+</section>
+<!-- Contact Section -->
+<section class="contact-section" id="contact">
+<div class="container">
+<div class="section-title">
+<h2>Contact Us</h2>
+</div>
+<div class="contact-grid">
+<div class="contact-info">
+<div class="contact-icon animated-bounce"><i class="fas fa-envelope"></i></div>
+<h3>Email</h3>
+<p>support@lookformybus.com</p>
+</div>
+<!-- Removed phone info block -->
+<div class="contact-info">
+<div class="contact-icon animated-bounce" style="animation-delay:0.4s;"><i class="fas fa-map-marker-alt"></i></div>
+<h3>Address</h3>
+<p>Adamas University, Kolkata 700126</p>
+</div>
+</div>
+<form autocomplete="off" class="contact-form">
+<div class="form-row">
+<input name="name" placeholder="Your Name" required="" type="text"/>
+<input name="email" placeholder="Your Email" required="" type="email"/>
+<input name="userphone" placeholder="Your Phone Number" required="" type="tel"/>
+</div>
+<textarea name="message" placeholder="Your Message" required="" rows="4"></textarea>
+<button class="btn btn-secondary" type="submit">Send Message <i class="fas fa-paper-plane"></i></button>
+<div class="form-success" style="display:none;">Thank you! We'll get back to you soon.</div>
+</form>
+</div>
+<div class="animated-bus-contact"></div>
+</section>
+<!-- Footer -->
+<footer>
+<div class="container">
+<div class="footer-content">
+<div class="footer-logo">
+<h3>Look For My Bus</h3>
+<p>Real-time bus tracking solution for tier-2 and small cities in India.</p>
+<div class="social-icons">
+<a href="#"><i class="fab fa-facebook-f"></i></a>
+<a href="#"><i class="fab fa-twitter"></i></a>
+<a href="#"><i class="fab fa-instagram"></i></a>
+<a href="#"><i class="fab fa-linkedin-in"></i></a>
+</div>
+</div>
+<div class="footer-links">
+<h4>Quick Links</h4>
+<ul>
+<li><a href="#">Home</a></li>
+<li><a href="#features">Features</a></li>
+<li><a href="#about">About Us</a></li>
+<li><a href="#contact">Contact</a></li>
+</ul>
+</div>
+<div class="footer-links">
+<h4>Support</h4>
+<ul>
+<li><a href="#">FAQ</a></li>
+<li><a href="#">Privacy Policy</a></li>
+<li><a href="#">Terms of Service</a></li>
+<li><a href="#">Authority Login</a></li>
+</ul>
+</div>
+</div>
+<div class="footer-bottom">
+<p>© 2025 Look For My Bus. All rights reserved.</p>
+</div>
+</div>
+<div class="moving-bus-footer"></div>
+</footer>
+<script>
+        // Demo slider functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelector('.demo-slides');
+            const dots = document.querySelectorAll('.demo-dot');
+            let currentSlide = 0;
+            
+            function showSlide(n) {
+                slides.style.transform = `translateX(-${n * 100}%)`;
+                dots.forEach(dot => dot.classList.remove('active'));
+                dots[n].classList.add('active');
+                currentSlide = n;
+            }
+            
+            dots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    showSlide(parseInt(this.getAttribute('data-slide')));
+                });
+            });
+            
+            // Auto slide
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % dots.length;
+                showSlide(currentSlide);
+            }, 5000);
+            
+            // Animate elements on scroll
+            const animatedElements = document.querySelectorAll('.feature-card, .benefit-card, .tech-card, .testimonial-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            
+            animatedElements.forEach(element => {
+                element.style.opacity = 0;
+                element.style.transform = 'translateY(20px)';
+                element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                observer.observe(element);
+            });
+        });
+        
+        // Contact form animation
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            this.querySelector('.form-success').style.display = 'block';
+            this.reset();
+            setTimeout(() => {
+                this.querySelector('.form-success').style.display = 'none';
+            }, 3500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track My Bus - Real-time Bus Tracking</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --primary-green: #10b981;
+            --primary-yellow: #f59e0b;
+            --light-gray: #f3f4f6;
+            --dark-gray: #4b5563;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8fafc;
+            color: #334155;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #1e40af 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .logo i {
+            color: var(--primary-yellow);
+        }
+        
+        .back-button {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: opacity 0.3s;
+        }
+        
+        .back-button:hover {
+            opacity: 0.8;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: flex;
+            margin: 2rem auto;
+            gap: 2rem;
+        }
+        
+        /* Bus Info Panel */
+        .bus-panel {
+            flex: 0 0 350px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .panel-header h1 {
+            font-size: 1.8rem;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .search-button {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 16px;
+            cursor: pointer;
+        }
+        
+        .bus-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .bus-item {
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        .bus-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bus-item.selected {
+            border-left: 4px solid var(--primary-green);
+            background-color: #e0f2fe;
+        }
+        
+        .bus-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .bus-number {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary-blue);
+        }
+        
+        .bus-eta {
+            background-color: var(--primary-green);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .bus-route {
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+        
+        .bus-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+        
+        .bus-occupancy {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .occupancy-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .occupancy-low {
+            background-color: var(--primary-green);
+        }
+        
+        .occupancy-medium {
+            background-color: var(--primary-yellow);
+        }
+        
+        .occupancy-high {
+            background-color: #ef4444;
+        }
+        
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            position: relative;
+        }
+        
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-wheel {
+            width: 60px;
+            height: 60px;
+            border: 6px solid var(--light-gray);
+            border-top: 6px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        /* Bus Arriving Notification */
+        .bus-arriving {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-green);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 500;
+            animation: pulse 2s infinite;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark-gray);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-bus {
+            position: absolute;
+            bottom: 20px;
+            left: -50px;
+            font-size: 24px;
+            animation: moveBus 15s linear infinite;
+        }
+        
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        @keyframes moveBus {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(100vw + 50px)); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .bus-panel {
+                flex: 1;
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+            }
+            
+            #map {
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .bus-panel {
+                padding: 1rem;
+            }
+            
+            .panel-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-bus"></i>
+                    <span>Track My Bus</span>
+                </div>
+                <a href="website_bus_connected.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Main Site
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <div class="main-content">
+            <!-- Bus Info Panel -->
+            <div class="bus-panel">
+                <div class="panel-header">
+                    <h1>Track Your Bus in Real-Time</h1>
+                    <p>Select a bus to see its current location and route</p>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" placeholder="Search by bus number or route...">
+                    <button class="search-button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                
+                <div class="bus-list">
+                    <!-- Bus items will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Map Container -->
+            <div class="map-container">
+                <div id="map"></div>
+                
+                <div class="loading-overlay">
+                    <div class="loading-wheel"></div>
+                    <p>Loading map and bus locations...</p>
+                </div>
+                
+                <div class="bus-arriving" style="display: none;">
+                    <i class="fas fa-bus"></i>
+                    <span>Bus B101 is arriving in less than 2 minutes!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>© 2023 Track My Bus - Real-time Bus Tracking Solution</p>
+                <p>Made with <i class="fas fa-heart" style="color: #ef4444;"></i> for better public transportation</p>
+            </div>
+        </div>
+        <div class="footer-bus">🚌</div>
+    </footer>
+
+    <script>
+        // Sample bus data - in a real app, this would come from an API
+        const busData = [
+            {
+                id: 1,
+                number: 'B101',
+                route: 'City Center - East End',
+                lat: 28.6139,
+                lng: 77.2090,
+                nextStop: 'Central Station',
+                eta: '5 min',
+                occupancy: 'medium',
+                stops: [
+                    {name: 'City Center', lat: 28.6139, lng: 77.2090},
+                    {name: 'Central Station', lat: 28.6419, lng: 77.2110},
+                    {name: 'East End Market', lat: 28.6539, lng: 77.2410},
+                    {name: 'East End Terminal', lat: 28.6639, lng: 77.2710}
+                ]
+            },
+            {
+                id: 2,
+                number: 'B202',
+                route: 'North Square - West Park',
+                lat: 28.6339,
+                lng: 77.2090,
+                nextStop: 'North Square',
+                eta: '3 min',
+                occupancy: 'low',
+                stops: [
+                    {name: 'North Square', lat: 28.6339, lng: 77.2090},
+                    {name: 'City Library', lat: 28.6439, lng: 77.2190},
+                    {name: 'West Park', lat: 28.6539, lng: 77.2290}
+                ]
+            },
+            {
+                id: 3,
+                number: 'B303',
+                route: 'South Mall - University Campus',
+                lat: 28.5939,
+                lng: 77.2290,
+                nextStop: 'Tech Park',
+                eta: '7 min',
+                occupancy: 'high',
+                stops: [
+                    {name: 'South Mall', lat: 28.5939, lng: 77.2290},
+                    {name: 'Tech Park', lat: 28.6039, lng: 77.2390},
+                    {name: 'University Campus', lat: 28.6139, lng: 77.2490}
+                ]
+            }
+        ];
+        
+        // Initialize variables
+        let map;
+        let busMarkers = [];
+        let stopMarkers = [];
+        let selectedBus = null;
+        
+        // Initialize the application
+        function init() {
+            // Render bus list
+            renderBusList();
+            
+            // Initialize map
+            initMap();
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                document.querySelector('.loading-overlay').style.display = 'none';
+                addBusStops();
+                addBuses();
+                
+                // Show arriving bus notification for demo
+                setTimeout(() => {
+                    document.querySelector('.bus-arriving').style.display = 'flex';
+                }, 3000);
+            }, 2000);
+        }
+        
+        // Render the list of buses
+        function renderBusList() {
+            const busList = document.querySelector('.bus-list');
+            busList.innerHTML = '';
+            
+            busData.forEach(bus => {
+                const occupancyClass = `occupancy-${bus.occupancy}`;
+                
+                const busItem = document.createElement('div');
+                busItem.className = 'bus-item';
+                busItem.dataset.busId = bus.id;
+                
+                busItem.innerHTML = `
+                    <div class="bus-item-header">
+                        <div class="bus-number">${bus.number}</div>
+                        <div class="bus-eta">${bus.eta}</div>
+                    </div>
+                    <div class="bus-route">${bus.route}</div>
+                    <div class="bus-info">
+                        <div class="bus-occupancy">
+                            <div class="occupancy-dot ${occupancyClass}"></div>
+                            <span>${bus.occupancy.charAt(0).toUpperCase() + bus.occupancy.slice(1)}</span>
+                        </div>
+                        <div class="next-stop">Next: ${bus.nextStop}</div>
+                    </div>
+                `;
+                
+                busItem.addEventListener('click', () => {
+                    selectBus(bus);
+                });
+                
+                busList.appendChild(busItem);
+            });
+        }
+        
+        // Initialize the map
+        function initMap() {
+            // Create map centered on a sample city (Delhi coordinates)
+            map = L.map('map').setView([28.6139, 77.2090], 13);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+        }
+        
+        // Add bus stops to the map
+        function addBusStops() {
+            // Collect all stops from all buses
+            const allStops = [];
+            busData.forEach(bus => {
+                bus.stops.forEach(stop => {
+                    if (!allStops.find(s => s.name === stop.name)) {
+                        allStops.push(stop);
+                    }
+                });
+            });
+            
+            // Add markers for each stop
+            allStops.forEach(stop => {
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: 'bus-stop-marker',
+                        html: '<div style="background-color: #10b981; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse 2s infinite;"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    })
+                }).addTo(map);
+                
+                marker.bindPopup(`<strong>${stop.name}</strong>`);
+                stopMarkers.push(marker);
+            });
+        }
+        
+        // Add buses to the map
+        function addBuses() {
+            busData.forEach(bus => {
+                // Create custom bus icon
+                const busIcon = L.divIcon({
+                    className: 'bus-marker',
+                    html: `
+                        <div style="position: relative;">
+                            <div style="background-color: #2563eb; color: white; width: 40px; height: 25px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">
+                                ${bus.number}
+                            </div>
+                            <div style="position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid #2563eb;"></div>
+                        </div>
+                    `,
+                    iconSize: [40, 33],
+                    iconAnchor: [20, 33]
+                });
+                
+                // Add marker for the bus
+                const marker = L.marker([bus.lat, bus.lng], {icon: busIcon, zIndexOffset: 1000})
+                    .addTo(map);
+                
+                // Create popup content
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h3 style="margin: 0 0 10px; color: #2563eb;">Bus ${bus.number}</h3>
+                        <p style="margin: 5px 0;"><strong>Route:</strong> ${bus.route}</p>
+                        <p style="margin: 5px 0;"><strong>Next Stop:</strong> ${bus.nextStop}</p>
+                        <p style="margin: 5px 0;"><strong>ETA:</strong> ${bus.eta}</p>
+                        <p style="margin: 5px 0;">
+                            <strong>Occupancy:</strong> 
+                            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${bus.occupancy === 'low' ? '#10b981' : bus.occupancy === 'medium' ? '#f59e0b' : '#ef4444'};"></span>
+                            ${bus.occupancy.charAt(0).toUpperCase() + bus.occupancy.slice(1)}
+                        </p>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                
+                // Add click event to select the bus
+                marker.on('click', () => {
+                    selectBus(bus);
+                });
+                
+                busMarkers.push({
+                    id: bus.id,
+                    marker: marker,
+                    data: bus
+                });
+            });
+            
+            // Start animation for buses
+            animateBuses();
+        }
+        
+        // Select a bus
+        function selectBus(bus) {
+            selectedBus = bus;
+            
+            // Update UI
+            document.querySelectorAll('.bus-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            document.querySelector(`.bus-item[data-bus-id="${bus.id}"]`).classList.add('selected');
+            
+            // Center map on bus
+            const busMarker = busMarkers.find(m => m.id === bus.id);
+            if (busMarker) {
+                map.setView(busMarker.marker.getLatLng(), 15);
+                busMarker.marker.openPopup();
+            }
+        }
+        
+        // Animate buses along their routes
+        function animateBuses() {
+            // For demo purposes, we'll just move the buses slightly
+            // In a real app, this would use actual GPS data and routes
+            setInterval(() => {
+                busMarkers.forEach(busMarker => {
+                    // Add small random movement to simulate live tracking
+                    const latOffset = (Math.random() - 0.5) * 0.001;
+                    const lngOffset = (Math.random() - 0.5) * 0.001;
+                    
+                    const newLat = busMarker.marker.getLatLng().lat + latOffset;
+                    const newLng = busMarker.marker.getLatLng().lng + lngOffset;
+                    
+                    busMarker.marker.setLatLng([newLat, newLng]);
+                    
+                    // Update ETA randomly
+                    const newEta = Math.max(1, Math.min(15, Math.floor(Math.random() * 15)));
+                    busMarker.data.eta = `${newEta} min`;
+                    
+                    // Update popup content
+                    const popupContent = `
+                        <div style="min-width: 200px;">
+                            <h3 style="margin: 0 0 10px; color: #2563eb;">Bus ${busMarker.data.number}</h3>
+                            <p style="margin: 5px 0;"><strong>Route:</strong> ${busMarker.data.route}</p>
+                            <p style="margin: 5px 0;"><strong>Next Stop:</strong> ${busMarker.data.nextStop}</p>
+                            <p style="margin: 5px 0;"><strong>ETA:</strong> ${busMarker.data.eta}</p>
+                            <p style="margin: 5px 0;">
+                                <strong>Occupancy:</strong> 
+                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${busMarker.data.occupancy === 'low' ? '#10b981' : busMarker.data.occupancy === 'medium' ? '#f59e0b' : '#ef4444'};"></span>
+                                ${busMarker.data.occupancy.charAt(0).toUpperCase() + busMarker.data.occupancy.slice(1)}
+                            </p>
+                        </div>
+                    `;
+                    
+                    busMarker.marker.setPopupContent(popupContent);
+                    
+                    // Update list item if this is the selected bus
+                    if (selectedBus && selectedBus.id === busMarker.id) {
+                        const etaElement = document.querySelector(`.bus-item[data-bus-id="${busMarker.id}"] .bus-eta`);
+                        if (etaElement) {
+                            etaElement.textContent = busMarker.data.eta;
+                        }
+                    }
+                });
+            }, 3000);
+        }
+        
+        // Initialize the app when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
